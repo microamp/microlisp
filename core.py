@@ -80,6 +80,10 @@ def strfy(*strs):
     return Str(reduce(lambda s1, s2: operator.add(s1, s2), strs))
 
 
+def concat(*lls):
+    return reduce(lambda l1, l2: l1.concat(l2), lls)
+
+
 # symbol-to-function mappings
 ns = {"+": add,
       "-": sub,
@@ -92,7 +96,7 @@ ns = {"+": add,
       ">=": ge,
       "car": lambda ll: ll.car(),
       "cdr": lambda ll: ll.cdr(),
-      "concat": lambda *lls: reduce(lambda l1, l2: l1.concat(l2), lls),
+      "concat": concat,
       "cons": lambda item, ll: ll.cons(item),
       "count": lambda ll, *args: len(ll),
       "empty?": lambda ll, *args: Bool(len(ll) == 0),

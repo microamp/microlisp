@@ -63,18 +63,21 @@ class LinkedList(collections.namedtuple("LinkedList", ("head", "tail",))):
     def cdr(self):
         return self.tail
 
+    def second(self):
+        return self.cdr().car()
+
     def cons(self, item):
         return LinkedList(head=item, tail=self)
 
     def reverse(self):
         return reduce(lambda ll, x: ll.cons(x),
-                      self.cdr(),
+                      self.cdr() or [],
                       LinkedList(head=self.car(), tail=None))
 
     def concat(self, other):
         r = self.reverse()
         return reduce(lambda ll, x: ll.cons(x),
-                      r.cdr(),
+                      r.cdr() or [],
                       other.cons(r.car()))
 
     hd = first = car  # aliases of `car`
@@ -133,3 +136,9 @@ if __name__ == "__main__":
     assert empty.cdr() is None
     assert str(empty) == "()"
     assert len(empty) == 0
+
+    ll_three = LinkedList.build(1, 2, 3, 4, 5)
+    assert ll_three.second() == 2
+
+    ll_reversed = LinkedList.build(1).reverse()
+    assert ll_reversed.car() == 1

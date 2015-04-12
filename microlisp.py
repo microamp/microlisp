@@ -4,9 +4,10 @@ import functools
 
 import reader
 import printer
+import lib
 from datatypes import Nil, Bool, Symbol, LinkedList
 from env import Env
-from core import ns
+from core import ns, concat
 from errors import NoEnvFound, NoSpecialFormFound
 
 # special forms (TODO: special forms)
@@ -16,7 +17,13 @@ SF_FN = "fn*"
 SF_IF = "if"
 SF_LET = "let*"
 SF_QUASIQUOTE = "quasiquote"
+SF_QUASIQUOTE_2 = "`"
 SF_QUOTE = "quote"
+SF_QUOTE_2 = "'"
+SF_SPLICE_UNQUOTE = "splice-unquote"
+SF_SPLICE_UNQUOTE_2 = "~@"
+SF_UNQUOTE = "unquote"
+SF_UNQUOTE_2 = "~"
 SPECIAL_FORMS = {SF_DEF,
                  SF_DO,
                  SF_FN,
@@ -98,11 +105,25 @@ def _sf_let(ast, env):
 
 
 def _sf_quasiquote(ast, env):
-    raise NotImplemented("TODO")
+    """Evaluate the special form, `quasiquote`.
+    """
+    def _unquote(ast):
+        if isinstance(ast, LinkedList):
+            sf, body = ast.car(), ast.second()
+            evaled = EVAL(body, env=env)
+            if sf in (SF_UNQUOTE,):
+                return LinkedList.build(evaled)
+            elif sf in (SF_SPLICE_UNQUOTE,):
+                return evaled
+        return LinkedList.build(ast)
+
+    return concat(*[_unquote(form) for form in ast.second()])
 
 
 def _sf_quote(ast, env):
-    raise NotImplemented("TODO")
+    """Evaluate the special form, `quote`.
+    """
+    return ast.second()
 
 
 special_form_fns = {SF_DEF: _sf_def,
@@ -150,20 +171,11 @@ def PRINT(ast, print_readably=True):
     return printer.print_str(ast, print_readably=print_readably)
 
 
-def compose(*fns):
-    def _compose(*args, **kwargs):
-        return functools.reduce(lambda v, g: g(v),
-                                fns[1:],
-                                fns[0](*args, **kwargs))
-
-    return _compose
-
-
 def rep(s, env):
     # read -> eval -> print
-    loop = compose(READ,
-                   functools.partial(EVAL, env=env),
-                   PRINT)
+    loop = lib.compose(READ,
+                       functools.partial(EVAL, env=env),
+                       PRINT)
     return loop(s)
 
 
